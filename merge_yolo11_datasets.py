@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Optional
 import yaml
 import sys
 import shutil
+import json
 
-def merge_datasets(ds_dirs: List[Path]):
+def merge_datasets(ds_dirs: List[Path], class_mapping_file: Optional[Path] = None):
     splits = ["train", "valid", "test"]
 
     # init structure for merged
@@ -12,6 +13,22 @@ def merge_datasets(ds_dirs: List[Path]):
     for split in splits:
         (merged_root / split / "images").mkdir(parents=True, exist_ok=True)
         (merged_root / split / "labels").mkdir(parents=True, exist_ok=True)
+
+    # Load manual class mapping if provided
+    manual_mappings = {}
+    if class_mapping_file and class_mapping_file.exists():
+        with open(class_mapping_file, 'r') as f:
+            file_ext = class_mapping_file.suffix.lower()
+            if file_ext == '.json':
+                manual_mappings = json.load(f)
+            elif file_ext in ['.yaml', '.yml']:
+                manual_mappings = yaml.safe_load(f)
+            else:
+                print(f"Unsupported mapping file format: {file_ext}")
+                print("Proceeding without manual mappings")
+        
+        if manual_mappings:
+            print(f"Loaded manual class mappings from {class_mapping_file}")
 
     # iteratively add datasets
     unique_train_ids, unique_val_ids, unique_test_ids = set(), set(), set()
@@ -29,11 +46,21 @@ def merge_datasets(ds_dirs: List[Path]):
         # Create mapping for this dataset's classes
         dataset_mapping = {}
         for i, class_name in enumerate(class_names):
-            if class_name not in all_classes:
-                all_classes.append(class_name)
+            # Check if this class has a manual mapping
+            mapped_name = class_name
+            if manual_mappings and "class_mappings" in manual_mappings:
+                for mapping in manual_mappings["class_mappings"]:
+                    for source in mapping.get("sources", []):
+                        if source.get("dataset") == ds_dir.name and source.get("class") == class_name:
+                            mapped_name = mapping["target"]
+                            print(f"Mapping '{ds_dir.name}.{class_name}' to '{mapped_name}'")
+                            break
+            
+            if mapped_name not in all_classes:
+                all_classes.append(mapped_name)
                 new_id = len(all_classes) - 1
             else:
-                new_id = all_classes.index(class_name)
+                new_id = all_classes.index(mapped_name)
             dataset_mapping[i] = new_id
         
         class_mapping[ds_dir.name] = dataset_mapping
@@ -123,10 +150,15 @@ def merge_datasets(ds_dirs: List[Path]):
     print(f"Test samples: {len(unique_test_ids)}")
 
 def main():
-    assert len(sys.argv) == 2, "Usage: python merge_yolo11_datasets.py <datasets_dir>"
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print("Usage: python merge_yolo11_datasets.py <datasets_dir> [class_mapping_file]")
+        sys.exit(1)
+    
     root_dir = Path(sys.argv[1])
+    class_mapping_file = Path(sys.argv[2]) if len(sys.argv) == 3 else None
+    
     ds_dirs = [p for p in root_dir.glob("*") if p.is_dir() and "yolov11" in p.name]
-    merge_datasets(ds_dirs)
+    merge_datasets(ds_dirs, class_mapping_file)
 
 if __name__ == "__main__":
     main()
