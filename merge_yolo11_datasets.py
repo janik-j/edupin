@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
 import yaml
 import sys
 import shutil
@@ -16,6 +16,8 @@ def merge_datasets(ds_dirs: List[Path], class_mapping_file: Optional[Path] = Non
 
     # Load manual class mapping if provided
     manual_mappings = {}
+    excluded_classes: Dict[str, Set[str]] = {}  # Format: {dataset_name: {class1, class2, ...}}
+    
     if class_mapping_file and class_mapping_file.exists():
         with open(class_mapping_file, 'r') as f:
             file_ext = class_mapping_file.suffix.lower()
@@ -29,6 +31,18 @@ def merge_datasets(ds_dirs: List[Path], class_mapping_file: Optional[Path] = Non
         
         if manual_mappings:
             print(f"Loaded manual class mappings from {class_mapping_file}")
+            
+        # Process excluded classes if present in the config
+        if manual_mappings and "excluded_classes" in manual_mappings:
+            for exclude_entry in manual_mappings["excluded_classes"]:
+                dataset = exclude_entry.get("dataset", "")
+                classes = exclude_entry.get("classes", [])
+                
+                if dataset and classes:
+                    if dataset not in excluded_classes:
+                        excluded_classes[dataset] = set()
+                    excluded_classes[dataset].update(classes)
+                    print(f"Will exclude classes {classes} from dataset {dataset}")
 
     # iteratively add datasets
     unique_train_ids, unique_val_ids, unique_test_ids = set(), set(), set()
@@ -41,19 +55,26 @@ def merge_datasets(ds_dirs: List[Path], class_mapping_file: Optional[Path] = Non
             data = yaml.safe_load(f)
             
         class_names = data["names"]
-        print(f"Dataset {ds_dir.name} has {len(class_names)} classes: {class_names}")
+        dataset_name = ds_dir.name
+        print(f"Dataset {dataset_name} has {len(class_names)} classes: {class_names}")
         
         # Create mapping for this dataset's classes
         dataset_mapping = {}
         for i, class_name in enumerate(class_names):
+            # Skip if class is in the exclusion list for this dataset
+            if dataset_name in excluded_classes and class_name in excluded_classes[dataset_name]:
+                dataset_mapping[i] = -1  # Mark as excluded
+                print(f"Excluding class '{class_name}' from dataset '{dataset_name}'")
+                continue
+                
             # Check if this class has a manual mapping
             mapped_name = class_name
             if manual_mappings and "class_mappings" in manual_mappings:
                 for mapping in manual_mappings["class_mappings"]:
                     for source in mapping.get("sources", []):
-                        if source.get("dataset") == ds_dir.name and source.get("class") == class_name:
+                        if source.get("dataset") == dataset_name and source.get("class") == class_name:
                             mapped_name = mapping["target"]
-                            print(f"Mapping '{ds_dir.name}.{class_name}' to '{mapped_name}'")
+                            print(f"Mapping '{dataset_name}.{class_name}' to '{mapped_name}'")
                             break
             
             if mapped_name not in all_classes:
@@ -63,7 +84,7 @@ def merge_datasets(ds_dirs: List[Path], class_mapping_file: Optional[Path] = Non
                 new_id = all_classes.index(mapped_name)
             dataset_mapping[i] = new_id
         
-        class_mapping[ds_dir.name] = dataset_mapping
+        class_mapping[dataset_name] = dataset_mapping
     
     print(f"Merged dataset will have {len(all_classes)} classes: {all_classes}")
     
@@ -100,20 +121,16 @@ def merge_datasets(ds_dirs: List[Path], class_mapping_file: Optional[Path] = Non
                 if new_id in unique_ids_set:
                     print(f"Warning: Duplicate ID {new_id} found in {split} split, skipping")
                     continue
-                    
-                unique_ids_set.add(new_id)
                 
-                # Copy image with new name
-                dest_img_path = merged_root / split / "images" / f"{new_id}{img_path.suffix}"
-                shutil.copy(img_path, dest_img_path)
-                
-                # Update and copy label file if it exists
+                # Update and process label file if it exists
                 label_path = labels_dir / f"{img_id}.txt"
+                has_valid_labels = False
+                updated_labels = []
+                
                 if label_path.exists():
                     with open(label_path, 'r') as f:
                         labels = f.readlines()
                         
-                    updated_labels = []
                     for label in labels:
                         parts = label.strip().split()
                         if not parts:
@@ -121,13 +138,30 @@ def merge_datasets(ds_dirs: List[Path], class_mapping_file: Optional[Path] = Non
                             
                         # Map the class ID to new global ID
                         old_class_id = int(parts[0])
-                        new_class_id = dataset_mapping[old_class_id]
+                        new_class_id = dataset_mapping.get(old_class_id, -1)
+                        
+                        # Skip excluded classes
+                        if new_class_id == -1:
+                            continue
                         
                         # Update class ID and keep other values (bbox coordinates)
                         parts[0] = str(new_class_id)
                         updated_labels.append(" ".join(parts) + "\n")
-                    
-                    # Write updated labels
+                        has_valid_labels = True
+                
+                # Skip samples that have no valid labels after exclusion
+                if not has_valid_labels and label_path.exists():
+                    print(f"Skipping {new_id} - no valid labels after exclusion")
+                    continue
+                
+                unique_ids_set.add(new_id)
+                
+                # Copy image with new name
+                dest_img_path = merged_root / split / "images" / f"{new_id}{img_path.suffix}"
+                shutil.copy(img_path, dest_img_path)
+                
+                # Write updated labels if there are any
+                if updated_labels:
                     dest_label_path = merged_root / split / "labels" / f"{new_id}.txt"
                     with open(dest_label_path, 'w') as f:
                         f.writelines(updated_labels)
