@@ -1,10 +1,10 @@
-# EduPin
+# EduPin 🚸
 
 ## Overview
 
 EduPin is an educational platform built on Raspberry Pi hardware designed specifically for children's traffic safety. The system leverages AI capabilities through the Hailo AI Hat for Raspberry Pi 5 to detect and announce traffic signals and road signs in real-time, helping children navigate potentially dangerous traffic situations safely.
 
-## Child Safety Features
+## Child Safety Features 🛡️
 
 EduPin acts as a safety companion that:
 - Detects and announces traffic signals (red lights, green lights)
@@ -14,7 +14,7 @@ EduPin acts as a safety companion that:
 
 These features make EduPin an excellent educational tool for teaching traffic safety basics while providing an extra layer of protection for children navigating streets and intersections.
 
-## Hardware Components
+## Hardware Components 🛠️
 
 - Raspberry Pi 5
 - Hailo AI Hat for accelerated machine learning inference
@@ -22,7 +22,7 @@ These features make EduPin an excellent educational tool for teaching traffic sa
 - Speaker for audio feedback
 - Additional sensors and peripherals (as applicable)
 
-## Repository Structure
+## Repository Structure 📁
 
 Everything in the `/device` directory is deployed on the Raspberry Pi:
 
@@ -45,7 +45,7 @@ The system is designed to be:
 - Reliable - uses advanced AI to ensure accurate detection
 - Child-friendly - delivers clear, simple audio instructions
 
-## Hailo AI Acceleration
+## Hailo AI Acceleration 🧠
 
 The Hailo AI Hat provides hardware acceleration for machine learning models, enabling:
 - Real-time object detection
@@ -54,7 +54,7 @@ The Hailo AI Hat provides hardware acceleration for machine learning models, ena
 
 This acceleration is critical for providing timely safety alerts without delays that could endanger children.
 
-## Getting Started
+## Getting Started 🏁
 
 ### Prerequisites
 - Raspberry Pi 5
@@ -85,8 +85,7 @@ python detection.py
 
 The system will start monitoring the environment and providing safety alerts when traffic signals are detected.
 
-## Documentation
+## Documentation 📚
 
 - [Hailo AI Hat Documentation](https://hailo.ai/developer-zone/)
 - [Raspberry Pi 5 Documentation](https://www.raspberrypi.com/documentation/)
-]
