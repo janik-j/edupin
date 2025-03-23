@@ -72,15 +72,7 @@ This acceleration is critical for providing timely safety alerts without delays 
    cd EduPin
    ```
 
-2. Install required dependencies:
-   ```bash
-   # Add dependency installation commands here
-   ```
-
-3. Configure the Hailo AI Hat:
-   ```bash
-   # Add Hailo configuration commands here
-   ```
+2. Install neccessary software in /device/ on Raspberry Pi 5
 
 ## Usage Examples
 
