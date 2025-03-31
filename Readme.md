@@ -1,7 +1,5 @@
 # EduPin 
-
-![EduPin](https://img.shields.io/badge/EduPin-Smart%20Child%20Safety%20Assistant-blue)  
-![Hackathon Winner](https://img.shields.io/badge/Winner-European%20Builder%20League%20(Munich)%20%7C%20EF%20Hackathon-gold)  
+ ![Hackathon Winner](https://img.shields.io/badge/Winner-European%20Builder%20League%20(Munich)%20%7C%20EF%20Hackathon-gree)  
 
 
 ## Overview
