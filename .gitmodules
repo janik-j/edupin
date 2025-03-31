@@ -1,0 +1,7 @@
+[submodule "device/lightberry-client"]
+    path = device/lightberry-client
+    url = ./device/lightberry-client
+
+[submodule "device/hailo-rpi5-examples"]
+    path = device/hailo-rpi5-examples
+    url = ./device/hailo-rpi5-examples 

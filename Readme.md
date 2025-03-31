@@ -1,8 +1,12 @@
-# EduPin 🚸
+# EduPin 
+
+![EduPin](https://img.shields.io/badge/EduPin-Smart%20Child%20Safety%20Assistant-blue)  
+![Hackathon Winner](https://img.shields.io/badge/Winner-European%20Builder%20League%20(Munich)%20%7C%20EF%20Hackathon-gold)  
+
 
 ## Overview
 
-EduPin is an educational platform built on Raspberry Pi hardware designed specifically for children's traffic safety. The system leverages AI capabilities through the Hailo AI Hat for Raspberry Pi 5 to detect and announce traffic signals and road signs in real-time, helping children navigate potentially dangerous traffic situations safely.
+EduPin is an educational platform built on Raspberry Pi hardware designed specifically for children's traffic safety. The system leverages AI capabilities through the Hailo AI Hat for Raspberry Pi 5 to detect and announce traffic signals and road signs in real-time, helping children navigate potentially dangerous traffic situations safely. You can also chat with the EduPin in realtime using the wakeword "EduPin".
 
 ## Child Safety Features 🛡️
 
@@ -13,6 +17,7 @@ EduPin acts as a safety companion that:
 - Helps children develop traffic awareness in a safe, guided way
 
 These features make EduPin an excellent educational tool for teaching traffic safety basics while providing an extra layer of protection for children navigating streets and intersections.
+
 
 ## Hardware Components 🛠️
 
@@ -54,6 +59,17 @@ The Hailo AI Hat provides hardware acceleration for machine learning models, ena
 
 This acceleration is critical for providing timely safety alerts without delays that could endanger children.
 
+## Datasets
+The model is trained on specialized datasets:
+1. Traffic Lights Dataset: [Pedestrian Traffic Light Dataset](https://universe.roboflow.com/ono-gedd7/pedestrian-traffic-light-puf4a)
+2. Traffic Signs Dataset: [Traffic Signs Dataset](https://universe.roboflow.com/an-wklgs/test-zif7v)
+
+## Model
+Deployed in ONNX format enabling:
+- **Cross-Framework & Hardware Compatibility**: ONNX allows deployment across multiple frameworks (PyTorch, TensorFlow, etc.) and accelerators (GPUs, TPUs, CPUs), ensuring broad support beyond Hailo's AI processors.
+- **Optimized Inference with Quantization & Pruning**: ONNX supports advanced optimization techniques such as structured/unstructured pruning, weight clustering, and post-training quantization (PTQ/QAT), reducing model size and latency while preserving accuracy.
+- **Efficient Execution with Graph Optimizations**: ONNX provides operator fusion, constant folding, and redundant node elimination, optimizing computational graphs for faster inference across different runtime environments (e.g., ONNX Runtime, TensorRT).
+
 ## Getting Started 🏁
 
 ### Prerequisites
@@ -84,6 +100,7 @@ python detection.py
 ```
 
 The system will start monitoring the environment and providing safety alerts when traffic signals are detected.
+If you want to enable custom wake word detection make sure to include a "your-custom.ppn" wake word model in /lightberry-client/models.
 
 ## Documentation 📚
 
